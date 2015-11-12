@@ -1,3 +1,6 @@
+/**
+ * Created by sail on 2015/11/6.
+ */
 /*global indexedDB*/
 'use strict';
 (function (factory) {
@@ -90,19 +93,19 @@
         this.tx = void 0;
     };
     DB.prototype.getKv = function (table, k, tx) {
-        return _get(this.db, table, k, tx).then(o=>(o.target.result || {}).v);
+        return _get(this.db, table, k, tx).then(o=>(o || {}).v);
     };
     DB.prototype.putKv = function (table, k, v, tx) {
-        return _put(this.db, table, {k, v}, tx).then(o=>(o.target.result));
+        return _put(this.db, table, {k, v}, tx);
     };
 
     DB.prototype.getKvStore = function (name) {
         var _this = this;
         return function (k, v) {
             if (v === void 0) {
-                return _get(_this.db, name, k).then(o=>(o.target.result || {}).v);
+                return _get(_this.db, name, k).then(o=>(o || {}).v);
             } else {
-                return _put(_this.db, name, {k, v}).then(o=>(o.target.result || {}).v);
+                return _put(_this.db, name, {k, v}).then(o=>(o || {}).v);
             }
         }
     };
@@ -113,20 +116,20 @@
         return new DbPromise(function (resolve, reject) {
             var request = indexedDB.open(name, version);
             request.onupgradeneeded = upgrade;
-            request.onsuccess = function (e) {
+            request.onsuccess = function () {
                 resolve(request.result);
             };
             request.onerror = reject;
         });
     }
 
-    function _put(db, table, data, tx, g) {
+    function _put(db, table, data, tx) {
         return new DbPromise(function (resolve, reject) {
             tx = tx || db.transaction(table, 'readwrite');
             var store = tx.objectStore(table);
             var request = store.put(data);
-            request.onsuccess = function (e) {
-                resolve(e);
+            request.onsuccess = function () {
+                resolve(request.result);
             };
             request.onerror = reject;
 
@@ -138,20 +141,20 @@
             tx = tx || db.transaction(table, 'readwrite');
             var store = tx.objectStore(table);
             var request = store.clear();
-            request.onsuccess = function (e) {
-                resolve(e);
+            request.onsuccess = function () {
+                resolve(request.result);
             };
             request.onerror = reject;
         });
     }
 
-    function _get(db, table, key, tx, g) {
+    function _get(db, table, key, tx) {
         return new DbPromise(function (resolve, reject) {
             tx = tx || db.transaction(table, 'readonly');
             var store = tx.objectStore(table);
             var request = store.get(key);
-            request.onsuccess = function (e) {
-                resolve(e);
+            request.onsuccess = function () {
+                resolve(request.result);
             };
             request.onerror = reject;
         });
