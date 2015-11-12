@@ -110,44 +110,50 @@
     return DB;
 
     function _open(name, upgrade, version) {
-        return new Promise(function (resolve) {
+        return new DbPromise(function (resolve, reject) {
             var request = indexedDB.open(name, version);
             request.onupgradeneeded = upgrade;
             request.onsuccess = function (e) {
                 resolve(request.result);
             };
-
+            request.onerror = reject;
         });
     }
 
     function _put(db, table, data, tx, g) {
-        return new DbPromise(function (resolve) {
+        return new DbPromise(function (resolve, reject) {
             tx = tx || db.transaction(table, 'readwrite');
             var store = tx.objectStore(table);
-            store.put(data).onsuccess = function (e) {
+            var request = store.put(data);
+            request.onsuccess = function (e) {
                 resolve(e);
             };
+            request.onerror = reject;
+
         });
     }
 
     function _clear(db, table, tx) {
-        return new Promise(function (resolve) {
+        return new Promise(function (resolve, reject) {
             tx = tx || db.transaction(table, 'readwrite');
             var store = tx.objectStore(table);
-            store.clear();
-            tx.oncomplete = function (e) {
+            var request = store.clear();
+            request.onsuccess = function (e) {
                 resolve(e);
             };
+            request.onerror = reject;
         });
     }
 
     function _get(db, table, key, tx, g) {
-        return new DbPromise(function (resolve) {
+        return new DbPromise(function (resolve, reject) {
             tx = tx || db.transaction(table, 'readonly');
             var store = tx.objectStore(table);
-            store.get(key).onsuccess = function (e) {
+            var request = store.get(key);
+            request.onsuccess = function (e) {
                 resolve(e);
             };
+            request.onerror = reject;
         });
     }
 
